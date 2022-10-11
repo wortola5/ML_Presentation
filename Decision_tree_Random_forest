@@ -1,0 +1,115 @@
+import pandas as pd
+from google.colab import files
+upload = files.upload()
+
+import io
+df = pd.read_csv(io.BytesIO(upload['sdss classification.csv']))
+
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.model_selection import train_test_split
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier
+df
+
+#I will be dropping features and I will be keeping ra, dec, u, g, r, i, z, redshift and I will choose CLASS as being my Target for this analysis. 
+
+df.drop(columns = ['objid', 'run', 'rerun', 'camcol', 'field', 'specobjid', 'plate', 'mjd', 'fiberid'], inplace=True)
+
+def cat_to_num (classCat):
+    if classCat=='STAR':
+        return 0
+    elif classCat=='GALAXY':
+        return 1
+    else:
+        return 2
+df['class'] = df['class'].apply(cat_to_num)
+
+df
+
+#Splitting the data for training and test
+X = df.drop('class', axis=1)
+y = df['class']
+X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=0.3, shuffle=True)
+
+#Modeling using Decision Tree
+Model_Tree = DecisionTreeClassifier().fit(X_train,y_train)
+y_pred = Model_Tree.predict(X_test)
+
+from sklearn.metrics import confusion_matrix
+mat = confusion_matrix(y_test, y_pred)
+sns.heatmap(mat.T, square=True, annot=True, fmt='d', cbar=False)
+plt.xlabel('true label')
+plt.ylabel('predicted label');
+
+print('DecisionTree Train Score is : ' , Model_Tree.score(X_train, y_train))
+print('DecisionTree Test Score is : ' , Model_Tree.score(X_test, y_test))
+
+#Let's now do Random Forest
+
+Model_Forest = RandomForestClassifier(n_estimators =100, random_state =44)
+Model_Forest.fit(X_train, y_train)
+y_forpred = Model_Forest.predict(X_test)
+
+mat = confusion_matrix(y_test, y_forpred)
+sns.heatmap(mat.T, square=True, annot=True, fmt='d', cbar=False)
+plt.xlabel('true label')
+plt.ylabel('predicted label');
+
+print('RandomForest Train Score is : ' , Model_Forest.score(X_train, y_train))
+print('RandomForest Test Score is : ' , Model_Forest.score(X_test, y_test))
+
+##LET'S LOOK AT ANOTHER DATA SET##
+
+upload = files.upload()
+
+df1 = pd.read_csv(io.BytesIO(upload['star classification.csv']))
+df1
+
+#There are six Classes of Stars in this dataset:
+
+#1)Brown Dwarf -> Star Type = 0
+
+#2)Red Dwarf -> Star Type = 1
+
+#3)White Dwarf-> Star Type = 2
+
+#4)Main Sequence -> Star Type = 3
+
+#5)Supergiant -> Star Type = 4
+
+#6) Hypergiant -> Star Type = 5
+
+#Splitting the data for training and test
+x = df1.drop('Spectral Class', axis=1)
+X1= x.drop('Star color', axis=1)
+y1 = df1['Star type']
+X1_train, X1_test, y1_train, y1_test = train_test_split(X1, y1, train_size=0.17, shuffle=True)
+
+#Modeling using Decision Tree
+Model_Tree1 = DecisionTreeClassifier().fit(X1_train,y1_train)
+y1_pred = Model_Tree1.predict(X1_test)
+
+mat = confusion_matrix(y1_test, y1_pred)
+sns.heatmap(mat.T, square=True, annot=True, fmt='d', cbar=False)
+plt.xlabel('true label')
+plt.ylabel('predicted label');
+
+print('DecisionTree Train Score is : ' , Model_Tree1.score(X1_train, y1_train))
+print('DecisionTree Test Score is : ' , Model_Tree1.score(X1_test, y1_test))
+
+#Random Forest Again
+
+Model_Forest1 = RandomForestClassifier(n_estimators =500, random_state =44)
+Model_Forest1.fit(X1_train, y1_train)
+y1_forpred = Model_Forest1.predict(X1_test)
+
+mat = confusion_matrix(y1_test, y1_forpred)
+sns.heatmap(mat.T, square=True, annot=True, fmt='d', cbar=False)
+plt.xlabel('true label')
+plt.ylabel('predicted label');
+
+print('RandomForest Train Score is : ' , Model_Forest1.score(X1_train, y1_train))
+print('RandomForest Test Score is : ' , Model_Forest1.score(X1_test, y1_test))
+
